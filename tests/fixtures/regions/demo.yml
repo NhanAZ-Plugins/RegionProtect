@@ -1,0 +1,5 @@
+Name: Demo region
+World: test
+FirstVector: {X: 1, Y: 2, Z: 3}
+SecondVector: {X: 10, Y: 20, Z: 30}
+Interactive: {PvP: false, BlockBreak: false, BlockPlace: true, Touch: false}

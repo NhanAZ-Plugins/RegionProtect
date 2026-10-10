@@ -1,58 +1,56 @@
-# General
-**RegionProtect is temporarily called a protected region?**
-Once the designated region is protected, the player will no longer worry about the features in a world, and when entering that region, it will display the title to let the player know the characteristics of the region there.
+# RegionProtect
 
-[![State](https://poggit.pmmp.io/shield.state/RegionProtect)](https://poggit.pmmp.io/p/RegionProtect)
-[![API](https://poggit.pmmp.io/shield.api/RegionProtect)](https://poggit.pmmp.io/p/RegionProtect)
-[![Downloads Total](https://poggit.pmmp.io/shield.dl.total/RegionProtect)](https://poggit.pmmp.io/p/RegionProtect)
-[![Downloads](https://poggit.pmmp.io/shield.dl/RegionProtect)](https://poggit.pmmp.io/p/RegionProtect)
-[![Lint](https://poggit.pmmp.io/ci.shield/kaidoMC-pm-pl/RegionProtect/RegionProtect)](https://poggit.pmmp.io/ci/kaidoMC-pm-pl/RegionProtect/RegionProtect)
+Protect named areas from PvP, block changes, and block interaction on Axolotl-PM.
 
-# Features
-- Show title when entering region.
-- Allow or disallow pvp in the region.
-- Allow or disallow block breaking in the region.
-- Allow or disallow placing in the region.
-- Allow or disallow touching (interaction) in the region.
+## Overview
 
-# How to use?
-1. `/region wand` - Take the wooden ax and choose the vector.
-2. Select the start and end points to set up the frameset for the region.
-3. `/region create` - You are required to fill in information to create an region.
-4.  `/region edit <regionName>` - Edit the region the you wants.
+RegionProtect stores each region in a YAML file and checks actions against the region's world and coordinates. Players with permission can select two corners, create a region, and change its rules through a form. Region entry can also show a title.
 
-# Permissions
-| Permission               | Description                                                                       |
-| ------------------------ | --------------------------------------------------------------------------------- |
-| `regionprotect.command.use`     | Basic permission to be able to use the Region feature.                            |
-| `regionprotect.interactive.use` | Permission is allowed to interact in the forbidden region. `(Developing)`         |
+## Requirements and compatibility
 
-# Futures
-- [ ] Notification type: subtitle, mess, popup, tip.
-- [ ] Sound.
-- [ ] Etc.
+- Axolotl-PM API `5.0.0` and PHP 8.1 or newer.
+- The bundled FormAPI virion is included in the release PHAR. No separate FormAPI plugin is needed for that artifact.
 
-# Configs
-```yaml
----
-# If true, show title when player enters an region.
-show-title: true
+The source has passed PHPStan at maximum level against Axolotl-PM 5.0.0 and the server revision pinned in the [build workflow](.github/workflows/build.yml). The release PHAR has been smoke tested on the pinned server revision. These checks do not establish compatibility with every release in the 5.x line or verify gameplay with a connected client.
 
-# Warning message are sent to players when their actions are blocked.
-warning-message: "Can't do this in the standing region."
+## Installation
 
-# Timeout between warning message in seconds.
-waiting-message: 3
+1. Back up your world and existing `plugin_data/RegionProtect/regions/` files before upgrading.
+2. Download `RegionProtect.phar` from the [GitHub releases](https://github.com/NhanAZ-Plugins/RegionProtect/releases) and place it in the server's `plugins/` directory.
+3. Start the server and check that RegionProtect enables without storage errors.
 
-# Operator players can still act in the forbidden region.
-interactive-operator: true
-...
-```
+Existing region files are validated at startup. If a file has an unsafe name or invalid region data, the plugin stops rather than silently changing the file. Fix the affected file from a backup before restarting.
 
-# Contacts
-**You can contact me directly through the platforms listed below**
-- Discord: @kaidojoestar272004#7124
-- Facebook: https://www.fb.com/kaidomc12345
-- Youtube: https://www.youtube.com/KAIDOMC
-# License
-[**GNU General Public License v3.0**](https://www.gnu.org/licenses/gpl-3.0.html)
+## Usage
+
+Run `/region wand` as an operator. Break a block to select the first corner and interact with a block to select the second. Select both corners in the same world, then run `/region create` and enter a region ID and display name in the form. IDs accept only ASCII letters, digits, and underscores. For example, `spawn_1` is valid.
+
+Use `/region list` to list regions in your current world. Use `/region edit spawn_1` to change its rules, or `/region delete spawn_1` to remove its file. Newly created regions allow all actions until you change their rules.
+
+| Permission | Purpose | Default |
+| --- | --- | --- |
+| `regionprotect.command.use` | Use the `/region` command. | Operator |
+| `regionprotect.interactive.use` | Bypass region restrictions when `interactive-operator` is enabled. | Operator |
+
+## Configuration
+
+The plugin creates `plugin_data/RegionProtect/config.yml` with these options.
+
+| Option | Purpose | Default |
+| --- | --- | --- |
+| `show-title` | Show the region name on entry. | `true` |
+| `warning-message` | Message sent when an action is blocked. | `Can't do this in the standing region` |
+| `waiting-message` | Minimum seconds between warning messages for one player. | `3` |
+| `interactive-operator` | Allow players with the bypass permission to ignore region restrictions. | `true` |
+
+Each region file stores a display name, world name, two corner vectors, and four Boolean rules named `PvP`, `BlockBreak`, `BlockPlace`, and `Touch`. Edit these files only while the server is stopped and retain a backup.
+
+## Building and testing
+
+The [build workflow](.github/workflows/build.yml) uses [DevTools](https://github.com/NhanAZ/DevTools) to run PHPStan at maximum level, build the plugin PHAR, and verify its checksum and bundled licenses. It checks out the FormAPI submodule at a fixed upstream commit. Use `git clone --recurse-submodules` for a local build.
+
+The behavior fixture can be run with `php tests/region-storage.php`. It covers region validation, boundary checks, path safety, and placement transactions that touch more than one block. The workflow run records the exact server and DevTools revisions used for each build.
+
+## Credits and license
+
+RegionProtect was created by kaidoMC. Original project contacts were Discord `@kaidojoestar272004#7124`, [Facebook](https://www.fb.com/kaidomc12345), and [YouTube](https://www.youtube.com/KAIDOMC). This repository retains the original [GPL-3.0 license](LICENSE). The bundled [FormAPI](https://github.com/jojoe77777/FormAPI) virion is by jojoe77777 and includes its own LGPL-3.0 license in the PHAR. For current support, use [NhanAZ Discord](https://discord.gg/j2X83ujT6c).

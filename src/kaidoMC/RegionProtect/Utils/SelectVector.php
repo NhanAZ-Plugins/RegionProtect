@@ -38,7 +38,10 @@ final class SelectVector {
 			TextFormat::RESET . "Tap to choose second place."
 		]);
 
-		$item->addEnchantment(new EnchantmentInstance(StringToEnchantmentParser::getInstance()->parse("unbreaking"), 1));
+		$unbreaking = StringToEnchantmentParser::getInstance()->parse('unbreaking');
+		if ($unbreaking !== null) {
+			$item->addEnchantment(new EnchantmentInstance($unbreaking, 1));
+		}
 		$item->getNamedTag()->setInt("selectVector", 1);
 
 		return $item;

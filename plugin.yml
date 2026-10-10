@@ -1,21 +1,21 @@
 ---
 name: RegionProtect
-version: 1.1.3
+version: 1.1.4
 api: 5.0.0
 main: kaidoMC\RegionProtect\RegionProtect
 author: kaidoMC
-description: A plugin that allows you to manage certain events in certain regions of the world.
-website: https://github.com/kaidomc-pm-pl
+description: Protect named regions from PvP, block changes, and interaction.
+website: https://github.com/NhanAZ-Plugins/RegionProtect
 
 commands:
   region:
-    description: "Region property little feature!"
+    description: Manage protected regions.
     permission: regionprotect.command.use
 permissions:
   regionprotect.command.use:
     default: op
-    description: "Basic permission to be able to use the Region feature"
+    description: Manage protected regions.
   regionprotect.interactive.use:
     default: op
-    description: "Permission is allowed to interact in the forbidden region. (Developing)"
+    description: Bypass region restrictions when interactive-operator is enabled.
 ...

@@ -6,6 +6,7 @@ namespace kaidoMC\RegionProtect;
 
 use kaidoMC\RegionProtect\EventListener;
 use kaidoMC\RegionProtect\Provider\VectorAdjust;
+use kaidoMC\RegionProtect\Provider\RegionRecord;
 use kaidoMC\RegionProtect\Utils\Configuration;
 use kaidoMC\RegionProtect\Utils\SelectVector;
 
@@ -17,6 +18,7 @@ use pocketmine\command\CommandSender;
 use pocketmine\command\Command;
 
 use pocketmine\plugin\PluginBase;
+use pocketmine\plugin\DisablePluginException;
 
 use pocketmine\utils\SingletonTrait;
 use pocketmine\utils\TextFormat;
@@ -34,8 +36,9 @@ class RegionProtect extends PluginBase {
 	 */
 	protected function onLoad(): void {
 		self::setInstance($this);
-		if (!is_dir($this->getDataFolder() . "regions/")) {
-			@mkdir($this->getDataFolder() . "regions/");
+		$directory = $this->getDataFolder() . 'regions/';
+		if (is_link(rtrim($directory, '/')) || (!is_dir($directory) && !mkdir($directory))) {
+			throw new DisablePluginException('Cannot use the regions directory safely');
 		}
 		$this->saveDefaultConfig();
 	}
@@ -46,6 +49,11 @@ class RegionProtect extends PluginBase {
 	protected function onEnable(): void {
 		Configuration::initConfig($this);
 		$this->vectorAdjust = new VectorAdjust($this);
+		try {
+			$this->vectorAdjust->getRecords();
+		} catch (\Throwable $error) {
+			throw new DisablePluginException('Invalid region storage: ' . $error->getMessage(), 0, $error);
+		}
 		$this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
 	}
 
@@ -53,7 +61,7 @@ class RegionProtect extends PluginBase {
 	 * @param CommandSender $sender
 	 * @param Command $command
 	 * @param string $label
-	 * @param array $args
+	 * @param list<string> $args
 	 *
 	 * @return bool
 	 */
@@ -92,15 +100,10 @@ class RegionProtect extends PluginBase {
 					$this->getVectorAdjust()->adjustLocation($sender, join(" ", $args));
 					break;
 				case "list":
-					$sender->sendMessage(TextFormat::YELLOW . "Total Regions in the world: (" . count($this->getVectorAdjust()->getLocations()) . ")");
-					foreach ($this->getVectorAdjust()->getLocations() as $file) {
-						$config = $this->getVectorAdjust()->getLocation(explode(".", $file)[0]);
-						if ($config != null) {
-							if ($config->get("World") != $sender->getWorld()->getDisplayName()) {
-								continue;
-							}
-							$sender->sendMessage(TextFormat::GREEN . explode(".", $file)[0] . ": " . TextFormat::DARK_GRAY . $config->get("FirstVector")["X"] . " " . $config->get("FirstVector")["Y"] . " " . $config->get("FirstVector")["Z"]);
-						}
+					$records = array_values(array_filter($this->getVectorAdjust()->getRecords(), static fn(RegionRecord $record) : bool => $record->world === $sender->getWorld()->getDisplayName()));
+					$sender->sendMessage(TextFormat::YELLOW . 'Total Regions in the world: (' . count($records) . ')');
+					foreach ($records as $record) {
+						$sender->sendMessage(TextFormat::GREEN . $record->id . ': ' . TextFormat::DARK_GRAY . $record->first['X'] . ' ' . $record->first['Y'] . ' ' . $record->first['Z']);
 					}
 					break;
 				default:
@@ -118,6 +121,10 @@ class RegionProtect extends PluginBase {
 	private function getBasicForm(Player $sender): void {
 		$firstVector = SelectVector::getFirstVector($sender);
 		$secondVector = SelectVector::getSecondVector($sender);
+		if ($firstVector === null || $secondVector === null || $firstVector->getWorld() !== $secondVector->getWorld() || $firstVector->getWorld() !== $sender->getWorld()) {
+			$sender->sendMessage(TextFormat::RED . 'Select two positions in your current world first.');
+			return;
+		}
 		$X1 = $firstVector->getX();
 		$X2 = $secondVector->getX();
 		$Y1 = $firstVector->getY();
@@ -129,15 +136,13 @@ class RegionProtect extends PluginBase {
 			if ($result === null) {
 				return;
 			}
-			if (!preg_match('/^[\w]+$/', $result[2])) {
-				$sender->sendMessage(TextFormat::RED . "Invalid region name! Only alphanumeric characters allowed.");
+			$id = $result[2] ?? null;
+			$name = $result[3] ?? null;
+			if (!is_string($id) || !RegionRecord::isSafeId($id) || !is_string($name) || trim($name) === '') {
+				$sender->sendMessage(TextFormat::RED . 'Use a region ID containing only letters, digits, and underscores, and a nonempty name.');
 				return;
 			}
-			if ($result[2] != null and $result[3] != null) {
-				$this->getVectorAdjust()->setLocation($sender, $result[2], $result[3], [$X1, $Y1, $Z1], [$X2, $Y2, $Z2]);
-			} else {
-				$sender->sendMessage(TextFormat::RED . "Invalid information, please try again!");
-			}
+			$this->getVectorAdjust()->setLocation($sender, $id, $name, [$X1, $Y1, $Z1], [$X2, $Y2, $Z2]);
 		});
 		$form->setTitle("Adjust Location");
 		$form->addLabel("Selected information:");

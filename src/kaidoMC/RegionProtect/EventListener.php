@@ -7,7 +7,6 @@ namespace kaidoMC\RegionProtect;
 use kaidoMC\RegionProtect\RegionProtect;
 use kaidoMC\RegionProtect\Utils\Configuration;
 use kaidoMC\RegionProtect\Utils\SelectVector;
-use pocketmine\block\Block;
 use pocketmine\entity\Location;
 
 use pocketmine\event\Listener;
@@ -61,8 +60,9 @@ class EventListener implements Listener {
 	public function onEntity(EntityDamageEvent $event): void {
 		if ($event instanceof EntityDamageByEntityEvent) {
 			$target = $event->getDamager();
-			if ($target instanceof Player) {
-				if (!$this->getRegionProtect()->getVectorAdjust()->getPvP($target->getLocation())) {
+			$victim = $event->getEntity();
+			if ($target instanceof Player && $victim instanceof Player) {
+				if (!$this->getRegionProtect()->getVectorAdjust()->getPvP($target->getLocation()) || !$this->getRegionProtect()->getVectorAdjust()->getPvP($victim->getLocation())) {
 					Configuration::shoot($target, $event);
 				}
 			}
@@ -101,12 +101,13 @@ class EventListener implements Listener {
 	public function onPlace(BlockPlaceEvent $event): void {
 		$blocks = $event->getTransaction()->getBlocks();
 		foreach ($blocks as [$x, $y, $z, $block]) {
-			if (!$block instanceof Block) return;
 			$blockVector = $block->getPosition();
 			if (!$this->getRegionProtect()->getVectorAdjust()->getInteractBlock(Location::fromObject($blockVector, $blockVector->getWorld()), $event)) {
 				Configuration::shoot($event->getPlayer(), $event);
+				if ($event->isCancelled()) {
+					return;
+				}
 			}
-			break;
 		}
 	}
 

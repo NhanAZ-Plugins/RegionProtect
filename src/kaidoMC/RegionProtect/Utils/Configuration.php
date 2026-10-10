@@ -14,6 +14,7 @@ use function microtime;
 
 final class Configuration {
 
+	/** @var array<string, float> */
 	private static array $timeMSG = [];
 
 	/**
@@ -21,7 +22,7 @@ final class Configuration {
 	 */
 	private static RegionProtect $rProtect;
 
-	public static function initConfig(RegionProtect $rProtect) {
+	public static function initConfig(RegionProtect $rProtect): void {
 		self::$rProtect = $rProtect;
 	}
 
@@ -36,31 +37,33 @@ final class Configuration {
 	 * @return bool
 	 */
 	public static function getInformed(): bool {
-		if (self::getRegionProtect()->getConfig()->get("show-title") != true) {
-			return false;
-		}
-		return true;
+		return self::getRegionProtect()->getConfig()->get('show-title') === true;
 	}
 
 
 	public static function shoot(Player $sender, EntityDamageEvent|BlockBreakEvent|BlockPlaceEvent|PlayerInteractEvent $event): void {
-		if (!($event->isCancelled())) {
-			if ($sender->hasPermission("region.interactive.use")) {
-				if (self::getRegionProtect()->getConfig()->get("interactive-operator") != false) {
-					return;
-				}
-			}
-			$event->cancel();
-			if (empty(self::$timeMSG[$sender->getName()])) {
-				self::$timeMSG[$sender->getName()] = microtime(true);
-				$sender->sendMessage(self::getRegionProtect()->getConfig()->get("warning-message"));
-			} else {
-				if (microtime(true) - floatval(self::$timeMSG[$sender->getName()]) < self::getRegionProtect()->getConfig()->get("waiting-message")) {
-					return;
-				}
-				unset(self::$timeMSG[$sender->getName()]);
-				$sender->sendMessage(self::getRegionProtect()->getConfig()->get("warning-message"));
-			}
+		if ($event->isCancelled()) {
+			return;
+		}
+		$config = self::getRegionProtect()->getConfig();
+		if ($sender->hasPermission('regionprotect.interactive.use') && $config->get('interactive-operator') === true) {
+			return;
+		}
+		$event->cancel();
+		$message = $config->get('warning-message');
+		if (!is_string($message)) {
+			$message = "Can't do this in the standing region.";
+		}
+		$delay = $config->get('waiting-message');
+		if ((!is_int($delay) && !is_float($delay)) || $delay < 0) {
+			$delay = 3;
+		}
+		$name = $sender->getName();
+		$now = microtime(true);
+		$last = self::$timeMSG[$name] ?? null;
+		if ($last === null || $now - $last >= $delay) {
+			self::$timeMSG[$name] = $now;
+			$sender->sendMessage($message);
 		}
 	}
 }
