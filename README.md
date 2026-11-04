@@ -56,3 +56,8 @@ The behavior fixture can be run with `php tests/region-storage.php`. It covers r
 ## Credits and license
 
 RegionProtect was created by kaidoMC. Original project contacts were Discord `@kaidojoestar272004#7124`, [Facebook](https://www.fb.com/kaidomc12345), and [YouTube](https://www.youtube.com/KAIDOMC). This repository retains the original [GPL-3.0 license](LICENSE). The bundled [FormAPI](https://github.com/jojoe77777/FormAPI) virion is by jojoe77777 and includes its own LGPL-3.0 license in the PHAR. For current support, use [NhanAZ Discord](https://discord.gg/j2X83ujT6c).
+
+
+## Credits
+
+Authors: NhanAZ, kaidoMC.
