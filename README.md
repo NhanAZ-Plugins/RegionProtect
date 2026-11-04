@@ -8,10 +8,6 @@ Protect named Axolotl-PM regions from PvP, block changes, and interaction
 [![Discord](https://img.shields.io/discord/986553214889517088?label=Discord&logo=discord&logoColor=white&color=5865F2)](https://discord.gg/j2X83ujT6c)
 
 
-## Overview
-
-RegionProtect stores each region in a YAML file and checks actions against the region's world and coordinates. Players with permission can select two corners, create a region, and change its rules through a form. Region entry can also show a title.
-
 ## Requirements and compatibility
 
 - Axolotl-PM API `5.0.0` and PHP 8.1 or newer.
