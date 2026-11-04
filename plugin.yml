@@ -3,7 +3,7 @@ name: RegionProtect
 version: 1.1.4
 api: 5.0.0
 main: kaidoMC\RegionProtect\RegionProtect
-author: kaidoMC
+authors: ["NhanAZ", "kaidoMC"]
 description: Protect named regions from PvP, block changes, and interaction.
 website: https://github.com/NhanAZ-Plugins/RegionProtect
 
